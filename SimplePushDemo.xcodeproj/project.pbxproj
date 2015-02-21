@@ -15,6 +15,9 @@
 		0B6C1DAF1A94086200DA4FAE /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6C1DAE1A94086200DA4FAE /* Images.xcassets */; };
 		0B6C1DB21A94086200DA4FAE /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B6C1DB01A94086200DA4FAE /* LaunchScreen.xib */; };
 		0B6C1DBE1A94086200DA4FAE /* SimplePushDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6C1DBD1A94086200DA4FAE /* SimplePushDemoTests.m */; };
+		0B6C1DCB1A96B72F00DA4FAE /* SRWebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6C1DCA1A96B72F00DA4FAE /* SRWebSocket.m */; };
+		0B6C1DCD1A97D65C00DA4FAE /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6C1DCC1A97D65C00DA4FAE /* libicucore.dylib */; };
+		0B6C1DCF1A97D67000DA4FAE /* libicucore.A.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6C1DCE1A97D67000DA4FAE /* libicucore.A.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +45,11 @@
 		0B6C1DB71A94086200DA4FAE /* SimplePushDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimplePushDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B6C1DBC1A94086200DA4FAE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0B6C1DBD1A94086200DA4FAE /* SimplePushDemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimplePushDemoTests.m; sourceTree = "<group>"; };
+		0B6C1DC81A96B72F00DA4FAE /* SocketRocket-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SocketRocket-Prefix.pch"; sourceTree = "<group>"; };
+		0B6C1DC91A96B72F00DA4FAE /* SRWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SRWebSocket.h; sourceTree = "<group>"; };
+		0B6C1DCA1A96B72F00DA4FAE /* SRWebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SRWebSocket.m; sourceTree = "<group>"; };
+		0B6C1DCC1A97D65C00DA4FAE /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
+		0B6C1DCE1A97D67000DA4FAE /* libicucore.A.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.A.dylib; path = usr/lib/libicucore.A.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B6C1DCF1A97D67000DA4FAE /* libicucore.A.dylib in Frameworks */,
+				0B6C1DCD1A97D65C00DA4FAE /* libicucore.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +75,8 @@
 		0B6C1D921A94086100DA4FAE = {
 			isa = PBXGroup;
 			children = (
+				0B6C1DCE1A97D67000DA4FAE /* libicucore.A.dylib */,
+				0B6C1DCC1A97D65C00DA4FAE /* libicucore.dylib */,
 				0B6C1D9D1A94086100DA4FAE /* SimplePushDemo */,
 				0B6C1DBA1A94086200DA4FAE /* SimplePushDemoTests */,
 				0B6C1D9C1A94086100DA4FAE /* Products */,
@@ -99,6 +111,7 @@
 		0B6C1D9E1A94086100DA4FAE /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0B6C1DC71A96B72F00DA4FAE /* SocketRocket */,
 				0B6C1D9F1A94086100DA4FAE /* Info.plist */,
 				0B6C1DA01A94086100DA4FAE /* main.m */,
 			);
@@ -121,6 +134,17 @@
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
+		};
+		0B6C1DC71A96B72F00DA4FAE /* SocketRocket */ = {
+			isa = PBXGroup;
+			children = (
+				0B6C1DC81A96B72F00DA4FAE /* SocketRocket-Prefix.pch */,
+				0B6C1DC91A96B72F00DA4FAE /* SRWebSocket.h */,
+				0B6C1DCA1A96B72F00DA4FAE /* SRWebSocket.m */,
+			);
+			name = SocketRocket;
+			path = deps/SocketRocket/SocketRocket;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -224,6 +248,7 @@
 			files = (
 				0B6C1DA41A94086100DA4FAE /* AppDelegate.m in Sources */,
 				0B6C1DA71A94086200DA4FAE /* SimplePushDemo.xcdatamodeld in Sources */,
+				0B6C1DCB1A96B72F00DA4FAE /* SRWebSocket.m in Sources */,
 				0B6C1DAA1A94086200DA4FAE /* ViewController.m in Sources */,
 				0B6C1DA11A94086100DA4FAE /* main.m in Sources */,
 			);
