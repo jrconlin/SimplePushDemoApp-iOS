@@ -18,6 +18,7 @@
 		0B6C1DCB1A96B72F00DA4FAE /* SRWebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6C1DCA1A96B72F00DA4FAE /* SRWebSocket.m */; };
 		0B6C1DCD1A97D65C00DA4FAE /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6C1DCC1A97D65C00DA4FAE /* libicucore.dylib */; };
 		0B6C1DCF1A97D67000DA4FAE /* libicucore.A.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6C1DCE1A97D67000DA4FAE /* libicucore.A.dylib */; };
+		0B6C1DD11A9BF41800DA4FAE /* README.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0B6C1DD01A9BF41800DA4FAE /* README.rtf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		0B6C1DCA1A96B72F00DA4FAE /* SRWebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SRWebSocket.m; sourceTree = "<group>"; };
 		0B6C1DCC1A97D65C00DA4FAE /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
 		0B6C1DCE1A97D67000DA4FAE /* libicucore.A.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.A.dylib; path = usr/lib/libicucore.A.dylib; sourceTree = SDKROOT; };
+		0B6C1DD01A9BF41800DA4FAE /* README.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = README.rtf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +106,7 @@
 				0B6C1DB01A94086200DA4FAE /* LaunchScreen.xib */,
 				0B6C1DA51A94086200DA4FAE /* SimplePushDemo.xcdatamodeld */,
 				0B6C1D9E1A94086100DA4FAE /* Supporting Files */,
+				0B6C1DD01A9BF41800DA4FAE /* README.rtf */,
 			);
 			path = SimplePushDemo;
 			sourceTree = "<group>";
@@ -228,6 +231,7 @@
 			files = (
 				0B6C1DAD1A94086200DA4FAE /* Main.storyboard in Resources */,
 				0B6C1DB21A94086200DA4FAE /* LaunchScreen.xib in Resources */,
+				0B6C1DD11A9BF41800DA4FAE /* README.rtf in Resources */,
 				0B6C1DAF1A94086200DA4FAE /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -443,6 +447,7 @@
 				0B6C1DC31A94086200DA4FAE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0B6C1DC41A94086200DA4FAE /* Build configuration list for PBXNativeTarget "SimplePushDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -451,6 +456,7 @@
 				0B6C1DC61A94086200DA4FAE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

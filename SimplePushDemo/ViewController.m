@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "SRWebSocket.h"
+#import "AppDelegate.h"
 
 @interface ViewController ()
 // NOTE: ctrl + drag from UILabel to 1st widget
@@ -25,10 +26,20 @@ NSString *endpoint;
 
 SRWebSocket *websocket;
 
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    // To get a value from AppDelegate, call this (ick).
+    // [(AppDelegate *)[(UIApplication *)[UIApplication sharedApplication] delegate] getSomeValue]
+    [self log: @"Starting up..."];
+}
+
+- (NSString *)getEndpoint {
+    return endpoint;
+}
+
+- (void)setEndpoint: (NSString *)ep {
+    endpoint = ep;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -48,6 +59,7 @@ SRWebSocket *websocket;
         prefix = @"      ";
     }
     NSRange range = NSMakeRange(offset, MIN(slen, MAX_STRINGS));
+    NSLog([NSString stringWithFormat:@"%@%@", prefix, message]);
     self.outputField.text = [NSString stringWithFormat:@"%@\n%@%@",
                              [[strings subarrayWithRange: range]  componentsJoinedByString:@"\n"],
                              prefix,
@@ -106,13 +118,18 @@ SRWebSocket *websocket;
 
 - (void) webSocketDidOpen:(SRWebSocket *)ws {
     websocket = ws;
-    NSString *connect = @"";
     NSError *error;
+    NSString *token = [(AppDelegate *)[UIApplication sharedApplication].delegate getTokenAsString];
+    NSDictionary *connect = [NSDictionary dictionaryWithObjectsAndKeys:
+                             @"apns", @"type",
+                             token, @"token",
+                             nil];
     NSData *msg = [NSJSONSerialization dataWithJSONObject: [ NSDictionary dictionaryWithObjectsAndKeys:
                                                             @"hello", @"messageType",
                                                             @"", @"uaid",
                                                             @[], @"channelIDs",
-                                                            connect, @"connect", nil]
+                                                            connect, @"connect",
+                                                            nil]
                                                   options: NSJSONWritingPrettyPrinted
                                                     error: &error
                    ];
