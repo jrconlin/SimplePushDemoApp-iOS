@@ -31,7 +31,18 @@ SRWebSocket *websocket;
     // Do any additional setup after loading the view, typically from a nib.
     // To get a value from AppDelegate, call this (ick).
     // [(AppDelegate *)[(UIApplication *)[UIApplication sharedApplication] delegate] getSomeValue]
+    [[self app] restoreState];
     [self log: @"Starting up..."];
+    NSString *host = (NSString *)[[self app] objectForKey:@"host"];
+    if (host == nil ) {
+        host = @"ws://localhost:8080/";
+    }
+    self.hostField.text = host;
+    endpoint = (NSString*)[[self app] objectForKey:@"endpoint"];
+}
+
+- (AppDelegate *) app {
+    return (AppDelegate *)[UIApplication sharedApplication].delegate;
 }
 
 - (NSString *)getEndpoint {
@@ -39,6 +50,7 @@ SRWebSocket *websocket;
 }
 
 - (void)setEndpoint: (NSString *)ep {
+    [[self app] setValue:ep forKey:@"endpoint"];
     endpoint = ep;
 }
 
@@ -94,7 +106,7 @@ SRWebSocket *websocket;
 
 
 - (void)onOpen:(SRWebSocket *)ws withConnect:(NSString *)connect{
-    
+    NSLog(@"Connecting...");
 }
 
 - (void)fetchEndpoint: (NSString *)url {
@@ -119,7 +131,7 @@ SRWebSocket *websocket;
 - (void) webSocketDidOpen:(SRWebSocket *)ws {
     websocket = ws;
     NSError *error;
-    NSString *token = [(AppDelegate *)[UIApplication sharedApplication].delegate getTokenAsString];
+    NSString *token = [[self app] getTokenAsString];
     NSDictionary *connect = [NSDictionary dictionaryWithObjectsAndKeys:
                              @"apns", @"type",
                              token, @"token",
@@ -137,7 +149,7 @@ SRWebSocket *websocket;
         [self error: [error description] ];
     }
     [self log: [NSString stringWithFormat: @"Sending: %@", [[NSString alloc] initWithData:msg encoding: NSUTF8StringEncoding ]]];
-    //[ws send:msg];
+    [ws send:msg];
     
 }
 
@@ -151,8 +163,9 @@ SRWebSocket *websocket;
         [self log: @"Got empty websocket message"];
         return;
     }
+    [self log: [NSString stringWithFormat:@"Got reply\n%@", (NSString *)message]];
     @try {
-        obj = [NSJSONSerialization JSONObjectWithData: message options: NSJSONReadingAllowFragments error: &error ];
+        obj = [NSJSONSerialization JSONObjectWithData:[message dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error: &error ];
         if (error != nil) {
             [self error: error.description];
             return;
@@ -169,20 +182,32 @@ SRWebSocket *websocket;
     }
     @finally {};
     // handle message
-    // Status should be 200
-    msgType = [msg objectForKey:@"messageType"];
+    @try {
+        long retVal = [(NSNumber *)[msg objectForKey:@"status"] longValue];
+        if (retVal  < 200 || retVal >= 300 ) {
+            [self error: [NSString stringWithFormat: @"An error occurred on the server: %@", (NSString *)[msg objectForKey:@"error"]]];
+             return;
+        }
+    }
+    @catch (NSException *exception){
+        [self error: [NSString stringWithFormat: @"Something REALLY bad happened %@", exception.description]];
+    }
+    @finally {};
+    msgType = (NSString*)[msg objectForKey:@"messageType"];
     if ([msgType isEqualToString: @"hello"]) {
-        NSData *msg = [NSJSONSerialization dataWithJSONObject:[NSDictionary dictionaryWithObjectsAndKeys:
+        // Remember kids, ObjectiveC dictionaries are specifed as Value:Key.
+        // makes sense Because that.
+        NSData *regmsg = [NSJSONSerialization dataWithJSONObject:[NSDictionary dictionaryWithObjectsAndKeys:
                                                            @"register", @"messageType",
-                                                           @"channelID", [self genGuid],
+                                                           [self genGuid], @"channelID",
                                                            nil]
                                                   options: NSJSONWritingPrettyPrinted
                                                     error: &error
                    ];
-        [ws send: msg];
+        [ws send: regmsg];
         return;
     } else if ([msgType isEqualToString: @"register"]) {
-        endpoint = (NSString *)[msg objectForKey:@"endpoint"];
+        endpoint = (NSString *)[msg objectForKey:@"ppushEndpoint"];
         if (endpoint == nil || [endpoint length] == 0) {
             [self error: @"returned endpoint is empty"];
             return;
@@ -258,6 +283,7 @@ SRWebSocket *websocket;
         [self log: @"No hostname specified."];
         return;
     }
+    [[self app] setValue: hostName forKey: @"host"];
     [self fetchEndpoint: hostName];
 }
 @end

@@ -19,8 +19,10 @@
 
 - (void)saveContext;
 - (NSURL *)applicationDocumentsDirectory;
-- (NSString *) getTokenAsString;
-
+- (NSString *)getTokenAsString;
+- (BOOL)restoreState;
+- (id)objectForKey:(NSString*)key;
+- (void)setValue:(id)value forKey:(NSString *)key;
 
 @end
 

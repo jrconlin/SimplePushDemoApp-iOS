@@ -14,22 +14,37 @@
 
 @implementation AppDelegate
 
-NSData *token;
-NSString *someValue = @"Some Delegate Value";
+NSMutableDictionary *settings;
+NSData *apnsToken;
 
-
-- (NSString *) getSomeValue {
-    return someValue;
+- (id)objectForKey:(NSString*)key {
+    @try {
+    return [settings objectForKey:key];
+    }
+    @catch (NSException *exception) {
+        NSLog(@"No key %@", key);
+        return nil;
+    }
+    @finally {
+    }
 }
 
-
-- (NSData *)getToken {
-    return token;
+- (void) setValue:(id)value forKey:(NSString*)key {
+    if (settings == nil) {
+        NSLog(@"Emergency alloc of settings");
+        settings = [NSMutableDictionary alloc];
+    }
+    [settings setValue:value forKey:key];
 }
 
 - (NSString *)getTokenAsString {
-    if (token == nil){
-        return @"";
+    NSData *token;
+    token = apnsToken;
+    if (token == nil) {
+        if ([self objectForKey:@"token"] == nil){
+            return @"";
+        }
+        token = (NSData *)[self objectForKey:@"token"];
     }
     const unsigned char *bytes = (const unsigned char *)[token bytes];
     NSUInteger len = [token length];
@@ -38,10 +53,6 @@ NSString *someValue = @"Some Delegate Value";
         [hex appendFormat: @"%02x", bytes[i]];
     }
     return (NSString *)hex;
-}
-
-- (void)setToken:(NSData *)tkn {
-    token=tkn;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -84,7 +95,7 @@ NSString *someValue = @"Some Delegate Value";
 }
 
 - (void) application:(UIApplication*)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    token = deviceToken;
+    [self setValue: deviceToken forKey:@"token"];
     NSLog(@"got remote token %@", [self getTokenAsString]);
 }
 
@@ -94,22 +105,22 @@ NSString *someValue = @"Some Delegate Value";
 }
 - (void)saveState {
     NSLog(@"Saving state...");
+    
     NSString *file = [self saveFilePath];
-    NSDictionary *state = [[NSDictionary alloc] initWithObjectsAndKeys:@"prevtoken",token,nil];
-    [state writeToFile:file atomically:YES];
+    [settings writeToFile:file atomically:YES];
 }
 
 - (BOOL)restoreState {
     NSLog(@"Restoring state...");
-/*    NSString *file = [self saveFilePath];
+    settings = [NSMutableDictionary alloc];
+    NSString *file = [self saveFilePath];
     if ([[NSFileManager defaultManager] fileExistsAtPath: file]) {
-        NSDictionary *state = [[NSDictionary alloc] initWithContentsOfFile:file];
-        token = (NSData *)[state objectForKey:@"token"];
+        settings = [settings initWithContentsOfFile:file];
         return true;
     }
+    settings = [settings init];
+    NSLog(@"No state to recover.");
     return false;
- */
-    return TRUE;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
