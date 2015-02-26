@@ -47,5 +47,26 @@ it during creation. \
 Once you have your AppID, you can create your iOS Provisioning Profile tied to the \
 AppID \
 \
+
+\b Certificates - Round 2
+\b0 \
+Once you've got the certs, you'll need to export them to the remote server.\
 \
+1. Select the Application certificate you created to use APNS (e.g. "Apple Development \
+IOS Push Services: com.jrconlin.SimplePushDemo")\
+2. Export the certificate as "simplepush.cer" with the file format of "Certificate (.cer)"\
+3. Export the certificate as "simplepush.p12" with the file format of "Personal Information Exchange (.p12)"\
+4. Copy both of these newly created files to your server.\
+5. Run the following commands:\
+```\
+openssl pkcs12 -in simplepush.p12 -nodes -out simplepush.key\
+openssl x509 -inform der -in simplepush.cer -out simplepush.cert\
+```\
+6. In your config.toml file, use:\
+```\
+[propping]\
+type = "apns"\
+certfile = "simplepush.cert"\
+keyfile = "simplepush.key"\
+```\
 }

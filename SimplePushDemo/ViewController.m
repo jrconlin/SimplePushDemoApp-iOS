@@ -207,7 +207,7 @@ SRWebSocket *websocket;
         [ws send: regmsg];
         return;
     } else if ([msgType isEqualToString: @"register"]) {
-        endpoint = (NSString *)[msg objectForKey:@"ppushEndpoint"];
+        endpoint = (NSString *)[msg objectForKey:@"pushEndpoint"];
         if (endpoint == nil || [endpoint length] == 0) {
             [self error: @"returned endpoint is empty"];
             return;
@@ -243,10 +243,10 @@ SRWebSocket *websocket;
     NSURL *dest = [NSURL URLWithString: endpoint];
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     // really?
-    NSString *now = [NSString stringWithFormat:@"%f", [[NSDate date] timeIntervalSince1970] *1000];
+    NSString *now = [NSString stringWithFormat:@"%ld", lroundf(CFAbsoluteTimeGetCurrent())];
     NSArray *body = @[
         [NSString stringWithFormat:@"%@=%@", @"version", now],
-        [NSString stringWithFormat:@"%@=%@", @"data", [now stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
+        [NSString stringWithFormat:@"%@=%@", @"data", [dataString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
     ];
     putBody = [body componentsJoinedByString:@"&"];
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL: dest];
