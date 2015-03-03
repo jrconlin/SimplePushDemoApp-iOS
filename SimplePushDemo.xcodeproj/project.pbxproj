@@ -52,6 +52,7 @@
 		0B6C1DCC1A97D65C00DA4FAE /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
 		0B6C1DCE1A97D67000DA4FAE /* libicucore.A.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.A.dylib; path = usr/lib/libicucore.A.dylib; sourceTree = SDKROOT; };
 		0B6C1DD01A9BF41800DA4FAE /* README.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = README.rtf; sourceTree = "<group>"; };
+		0B6C1DD31AA5145900DA4FAE /* simplepush.php */ = {isa = PBXFileReference; lastKnownFileType = text.script.php; name = simplepush.php; path = "../../../Google Drive/Work/ios/simplepush.php"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +115,7 @@
 		0B6C1D9E1A94086100DA4FAE /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0B6C1DD21AA512BF00DA4FAE /* Demo */,
 				0B6C1DC71A96B72F00DA4FAE /* SocketRocket */,
 				0B6C1D9F1A94086100DA4FAE /* Info.plist */,
 				0B6C1DA01A94086100DA4FAE /* main.m */,
@@ -148,6 +150,14 @@
 			name = SocketRocket;
 			path = deps/SocketRocket/SocketRocket;
 			sourceTree = SOURCE_ROOT;
+		};
+		0B6C1DD21AA512BF00DA4FAE /* Demo */ = {
+			isa = PBXGroup;
+			children = (
+				0B6C1DD31AA5145900DA4FAE /* simplepush.php */,
+			);
+			name = Demo;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 

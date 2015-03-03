@@ -17,12 +17,14 @@
 @property (nonatomic, weak) IBOutlet UITextField *hostField;
 @property (nonatomic, weak) IBOutlet UITextView *outputField;
 @property(nonatomic, weak) IBOutlet UITextField *dataField;
+- (void)log:(NSString *)msg;
 @end
 
 @implementation ViewController
 
 int const MAX_STRINGS;
 NSString *endpoint;
+
 
 SRWebSocket *websocket;
 
@@ -135,6 +137,10 @@ SRWebSocket *websocket;
     NSDictionary *connect = [NSDictionary dictionaryWithObjectsAndKeys:
                              @"apns", @"type",
                              token, @"token",
+                             // the following are optional, but will result in the notification being presented
+                             // if the app is not running or in the foreground.
+                             //@"A Simplepush Event has appeared!", @"title",
+                             //@"I wish that silent notification worked.", @"body",
                              nil];
     NSData *msg = [NSJSONSerialization dataWithJSONObject: [ NSDictionary dictionaryWithObjectsAndKeys:
                                                             @"hello", @"messageType",
@@ -182,21 +188,10 @@ SRWebSocket *websocket;
     }
     @finally {};
     // handle message
-    @try {
-        long retVal = [(NSNumber *)[msg objectForKey:@"status"] longValue];
-        if (retVal  < 200 || retVal >= 300 ) {
-            [self error: [NSString stringWithFormat: @"An error occurred on the server: %@", (NSString *)[msg objectForKey:@"error"]]];
-             return;
-        }
-    }
-    @catch (NSException *exception){
-        [self error: [NSString stringWithFormat: @"Something REALLY bad happened %@", exception.description]];
-    }
-    @finally {};
     msgType = (NSString*)[msg objectForKey:@"messageType"];
     if ([msgType isEqualToString: @"hello"]) {
         // Remember kids, ObjectiveC dictionaries are specifed as Value:Key.
-        // makes sense Because that.
+        // makes sense Because that.h
         NSData *regmsg = [NSJSONSerialization dataWithJSONObject:[NSDictionary dictionaryWithObjectsAndKeys:
                                                            @"register", @"messageType",
                                                            [self genGuid], @"channelID",
@@ -212,7 +207,10 @@ SRWebSocket *websocket;
             [self error: @"returned endpoint is empty"];
             return;
         }
+        // At this point, it's safe to close the websocket handler.
+        //[ws close];
     }
+    NSLog(@"Got message: %@", msg);
     return;
 }
 
@@ -238,11 +236,9 @@ SRWebSocket *websocket;
         return;
     }
     
-    [self log: [NSString stringWithFormat:@"Data: %@", dataString]];
-    // TODO PUT to the endpoint
+    [self log: [NSString stringWithFormat:@"Sending Data to server: %@", dataString]];
     NSURL *dest = [NSURL URLWithString: endpoint];
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
-    // really?
     NSString *now = [NSString stringWithFormat:@"%ld", lroundf(CFAbsoluteTimeGetCurrent())];
     NSArray *body = @[
         [NSString stringWithFormat:@"%@=%@", @"version", now],
@@ -250,7 +246,7 @@ SRWebSocket *websocket;
     ];
     putBody = [body componentsJoinedByString:@"&"];
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL: dest];
-    [req setTimeoutInterval: 10.0f];
+    [req setTimeoutInterval: 0];
     [req setHTTPMethod: @"PUT"];
     [req setHTTPBody: [putBody dataUsingEncoding: NSUTF8StringEncoding]];
     [NSURLConnection
@@ -278,7 +274,6 @@ SRWebSocket *websocket;
 
 - (IBAction)Connect:(id)sender {
     NSString *hostName = self.hostField.text;
-    
     if ([hostName length] == 0) {
         [self log: @"No hostname specified."];
         return;

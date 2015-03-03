@@ -28,10 +28,13 @@ Once you have that, feel free to download xCode from the Mac Store. This app\
 was built in 6.1.1 and is targeted for a minimum of 8.1. I could have done extra \
 work to support older versions, but this is a demo. \
 \
+I found <http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1> to be useful in describing the steps required.\
+\
+\
 
-\b Certificates - Round 1
-\b0 \
-Now that you've got xCode installed, you'll need to create a few certificates.\
+\b Certificates - Round 1\
+
+\b0 Now that you've got xCode installed, you'll need to create a few certificates.\
 Feel free to go to \
 https://developer.apple.com/account/ios/certificate/certificateList.action?type=development\
 Push certificates are limited to a single app. The first thing you'll need is a personal\
@@ -44,6 +47,8 @@ is called SimplePushDemo, so I'd need to create a provisioning AppID called \
 creating the provision. You can edit the provision and add it later, but it's easiest to do\
 it during creation. \
 \
+Save the file as "*.csr.cer" (e.g. I saved this file for my profile as "com.jrconlin.csr.cer")\
+\
 Once you have your AppID, you can create your iOS Provisioning Profile tied to the \
 AppID \
 \
@@ -51,22 +56,22 @@ AppID \
 \b Certificates - Round 2
 \b0 \
 Once you've got the certs, you'll need to export them to the remote server.\
+0. In Keychain Access, Request a certificate from a Certificate Authority. For this example, I'll refer to this as "com.jrconlin.SimplePush.dev"\
+1.Export the Private Key for the associated request certificate: (e.g. the Private Key for "com.jrconlin.SimplePush.dev") as a .p12 file. \
+2. On developer.apple.com; under AppIDs, add a new AppID.\
+3. Choose the created signing request (e.g. "com.jrconlin.SimplePush.dev")\
+4. Download the created cert (e.g. as "com.jrconlin.SimplePush.dev.cer")\
+5. Convert p12 to PEM file\
+$ openssl pkcs12 -nocerts -in com.jrconlin.SimplePush.dev.p12 -out com.jrconlin.SimplePush.dev.key.pem\
+6. Strip the password from the key (golang will not read a private key with a password)\
+$ openssl rsa -in com.jrconlin.SimplePush.dev.key.pem -out com.jrconlin.SimplePush.dev.nopass.key.pem\
+7 Convert the cer file to a PEM\
+$ openssl x509 -inform der -in com.jrconlin.SimplePush.dev.cer -out com.jrconlin.SimplePush.dev.cer.pem\
+8 Add the files to your config.toml file as\
+certfile = "com.jrconlin.SimplePush.dev.cer.pem"\
+keyfile = "com.jrconlin.SimplePush.dev.nopass.key.pem"\
 \
-1. Select the Application certificate you created to use APNS (e.g. "Apple Development \
-IOS Push Services: com.jrconlin.SimplePushDemo")\
-2. Export the certificate as "simplepush.cer" with the file format of "Certificate (.cer)"\
-3. Export the certificate as "simplepush.p12" with the file format of "Personal Information Exchange (.p12)"\
-4. Copy both of these newly created files to your server.\
-5. Run the following commands:\
-```\
-openssl pkcs12 -in simplepush.p12 -nodes -out simplepush.key\
-openssl x509 -inform der -in simplepush.cer -out simplepush.cert\
-```\
-6. In your config.toml file, use:\
-```\
-[propping]\
-type = "apns"\
-certfile = "simplepush.cert"\
-keyfile = "simplepush.key"\
-```\
-}
+
+\b About Notifications
+\b0 \
+I have not yet been able to send Notifications using frame format 2. I've checked the binary format. I have no idea why they're being accepted, but not sent through to the client. I've modified an existing PHP script to illustrate this. }
