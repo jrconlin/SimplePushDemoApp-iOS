@@ -163,9 +163,9 @@ ViewController *view;
     // Success!
     // TODO: You want to record the userInfo struct if running in the background or disabled.
     //       then check for that info when re-enabled.
-    NSLog([userInfo valueForKey:@"data"]);
+    NSLog([userInfo valueForKey:@"Msg"]);
     // If we were going to do more here, this is where we would call fancier functions.
-    [view log: [NSString stringWithFormat:@"Got APNS message!\ndata from push: %@",[userInfo valueForKey:@"data"]]];
+    [view log: [NSString stringWithFormat:@"Got APNS message!\nMsg from push: %@",[userInfo valueForKey:@"Msg"]]];
     completionHandler(UIBackgroundFetchResultNewData);
 }
 
