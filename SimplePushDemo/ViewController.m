@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "ViewController.h"
-#import "SRWebSocket.h"
+// #import "SRWebSocket.h"
 #import "AppDelegate.h"
 
 @interface ViewController ()
@@ -25,10 +25,15 @@
 @implementation ViewController
 
 int const MAX_STRINGS;
+
+// values from the server
 NSString *endpoint;
+NSString *sharedSecret;
+NSString *channelID;
+NSString *uaid;
 
 
-SRWebSocket *websocket;
+// SRWebSocket *websocket;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -65,9 +70,9 @@ SRWebSocket *websocket;
 
 // Semi-ugly hack to limit the number of messages printed on the screen.
 - (void)print:(NSString *)message withPrefix:(NSString *)prefix{
-    uint offset = 0;
+    unsigned long offset = 0;
     NSArray *strings = [self.outputField.text componentsSeparatedByString:@"\n"];
-    uint slen = [strings count];
+    unsigned long slen = [strings count];
     if (slen > MAX_STRINGS) {
         offset = slen - MAX_STRINGS;
     }
@@ -108,12 +113,62 @@ SRWebSocket *websocket;
     return  (NSString*) hex;
 }
 
+- (void)fetchEndpoint: (NSString *)url {
+    NSURL *dest = [NSURL URLWithString: url];
+    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+    NSString *now = [NSString stringWithFormat:@"%ld", lroundf(CFAbsoluteTimeGetCurrent())];
+    NSString *token = [[self app] getTokenAsString];
+    NSString  *channelId = [self genGuid];
+    NSError *error;
+    NSData *routerData= [NSJSONSerialization dataWithJSONObject:[ NSDictionary dictionaryWithObjectsAndKeys:
+                                                                 token, @"token",
+                                                                 nil]
+                                                        options: NSJSONWritingPrettyPrinted
+                                                          error: &error
+                         ];
+    NSData *msg = [NSJSONSerialization dataWithJSONObject: [ NSDictionary dictionaryWithObjectsAndKeys:
+                                                            @"apns", @"type",
+                                                            channelId, @"channelID",
+                                                            routerData, @"data",
+                                                            nil]
+                                                  options: NSJSONWritingPrettyPrinted
+                                                    error: &error
+                   ];
+    ;
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL: dest];
+    [req setTimeoutInterval: 0];
+    [req setHTTPMethod: @"POST"];
+    [req setHTTPBody: msg];
+    [NSURLConnection
+     sendAsynchronousRequest:req
+     queue: queue
+     completionHandler:^(NSURLResponse *resp,
+                         NSData *data,
+                         NSError *error) {
+         if (error != nil) {
+             [self error: [NSString stringWithFormat: @"Could not PUT data: %@", error.description]];
+             return;
+         }
+         long code = [(NSHTTPURLResponse *)resp statusCode];
+         if (code < 200 || code > 299) {
+             [self error: [NSString stringWithFormat: @"Unexpected status response %ld", code]];
+         }
+         // Set the values from the server
+         endpoint = [data valueForKey: @"endpoint"];
+         sharedSecret = [data valueForKey: @"hash"];
+         uaid = [data valueForKey: @"uaid"];
+         channelID = [data valueForKey: @"channelID"];
+     }];
+    NSLog([NSString stringWithFormat: @"Got endpoint %@", endpoint]);
+}
 
+/*
+ 
 - (void)onOpen:(SRWebSocket *)ws withConnect:(NSString *)connect{
     NSLog(@"Connecting...");
 }
 
-- (void)fetchEndpoint: (NSString *)url {
+- (void)fetchEndpointWS: (NSString *)url {
     @try {
         [self log: [NSString stringWithFormat: @"Fetching endpoint from %@", url]];
         SRWebSocket *ws = [[SRWebSocket alloc] initWithURL:[NSURL URLWithString: url]];
@@ -193,7 +248,7 @@ SRWebSocket *websocket;
     msgType = (NSString*)[msg objectForKey:@"messageType"];
     if ([msgType isEqualToString: @"hello"]) {
         // Remember kids, ObjectiveC dictionaries are specifed as Value:Key.
-        // makes sense Because that.h
+        // makes sense Because that.
         NSData *regmsg = [NSJSONSerialization dataWithJSONObject:[NSDictionary dictionaryWithObjectsAndKeys:
                                                            @"register", @"messageType",
                                                            [self genGuid], @"channelID",
@@ -227,6 +282,7 @@ SRWebSocket *websocket;
     websocket = nil;
     // shutdown
 }
+ */
 
 //Connect to the remote host
 - (IBAction)SendData:(id)sender {
