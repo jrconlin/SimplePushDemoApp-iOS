@@ -44,7 +44,7 @@ NSString *uaid;
     [self log: @"Starting up..."];
     NSString *host = (NSString *)[[self app] objectForKey:@"host"];
     if (host == nil ) {
-        host = @"ws://localhost:8080/";
+        host = @"http://localhost:8082/register";
     }
     self.hostField.text = host;
     endpoint = (NSString*)[[self app] objectForKey:@"endpoint"];
@@ -54,13 +54,11 @@ NSString *uaid;
     return (AppDelegate *)[UIApplication sharedApplication].delegate;
 }
 
-- (NSString *)getEndpoint {
-    return endpoint;
-}
-
-- (void)setEndpoint: (NSString *)ep {
-    [[self app] setValue:ep forKey:@"endpoint"];
-    endpoint = ep;
+- (void)setServerData: (NSDictionary *)sd {
+    endpoint = [sd valueForKey: @"endpoint"];
+    sharedSecret = [sd valueForKey:@"hash"];
+    uaid = [sd valueForKey:@"uaid"];
+    channelID = [sd valueForKey:@"channelID"];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -69,22 +67,25 @@ NSString *uaid;
 }
 
 // Semi-ugly hack to limit the number of messages printed on the screen.
-- (void)print:(NSString *)message withPrefix:(NSString *)prefix{
-    unsigned long offset = 0;
-    NSArray *strings = [self.outputField.text componentsSeparatedByString:@"\n"];
-    unsigned long slen = [strings count];
-    if (slen > MAX_STRINGS) {
-        offset = slen - MAX_STRINGS;
-    }
-    if ([prefix length] == 0) {
-        prefix = @"      ";
-    }
-    NSRange range = NSMakeRange(offset, MIN(slen, MAX_STRINGS));
-    NSLog([NSString stringWithFormat:@"%@%@", prefix, message]);
-    self.outputField.text = [NSString stringWithFormat:@"%@\n%@%@",
+- (void)print:(NSString *)message withPrefix:(NSString *)sprefix{
+    [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
+        unsigned long offset = 0;
+        NSString *prefix = sprefix;
+        NSArray *strings = [self.outputField.text componentsSeparatedByString:@"\n"];
+        unsigned long slen = [strings count];
+        if (slen > MAX_STRINGS) {
+            offset = slen - MAX_STRINGS;
+        }
+        if ([sprefix length] == 0) {
+            prefix = @"      ";
+        }
+        NSRange range = NSMakeRange(offset, MIN(slen, MAX_STRINGS));
+        NSLog([NSString stringWithFormat:@"%@%@", prefix, message]);
+        self.outputField.text = [NSString stringWithFormat:@"%@\n%@%@",
                              [[strings subarrayWithRange: range]  componentsJoinedByString:@"\n"],
                              prefix,
                              message];
+        }];
 }
 
 - (void)error:(NSString *) message {
@@ -120,12 +121,13 @@ NSString *uaid;
     NSString *token = [[self app] getTokenAsString];
     NSString  *channelId = [self genGuid];
     NSError *error;
-    NSData *routerData= [NSJSONSerialization dataWithJSONObject:[ NSDictionary dictionaryWithObjectsAndKeys:
+    if (token == nil || [token isEqual: @""]) {
+        [self log: @"Token is nil. This will only end in tears. Please check error log and provisioning."];
+        return;
+    }
+    NSDictionary *routerData= [NSDictionary dictionaryWithObjectsAndKeys:
                                                                  token, @"token",
-                                                                 nil]
-                                                        options: NSJSONWritingPrettyPrinted
-                                                          error: &error
-                         ];
+                                                                 nil];
     NSData *msg = [NSJSONSerialization dataWithJSONObject: [ NSDictionary dictionaryWithObjectsAndKeys:
                                                             @"apns", @"type",
                                                             channelId, @"channelID",
@@ -134,7 +136,6 @@ NSString *uaid;
                                                   options: NSJSONWritingPrettyPrinted
                                                     error: &error
                    ];
-    ;
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL: dest];
     [req setTimeoutInterval: 0];
     [req setHTTPMethod: @"POST"];
@@ -152,137 +153,22 @@ NSString *uaid;
          long code = [(NSHTTPURLResponse *)resp statusCode];
          if (code < 200 || code > 299) {
              [self error: [NSString stringWithFormat: @"Unexpected status response %ld", code]];
+             return;
          }
          // Set the values from the server
-         endpoint = [data valueForKey: @"endpoint"];
-         sharedSecret = [data valueForKey: @"hash"];
-         uaid = [data valueForKey: @"uaid"];
-         channelID = [data valueForKey: @"channelID"];
+         dispatch_async(dispatch_get_main_queue(), ^ {
+             /* This may be needlessly complex because of a vague runtime error returned by iOS */
+             @synchronized(self) {
+                 NSError *lerr;
+                 NSDictionary *reply = [NSJSONSerialization JSONObjectWithData: data
+                                                                       options: NSJSONReadingMutableContainers
+                                                                         error: &lerr];
+                 [self setServerData: reply];
+                 [self log: [NSString stringWithFormat: @"Got endpoint %@", [reply objectForKey: @"endpoint"]]];
+             }
+         });
      }];
-    NSLog([NSString stringWithFormat: @"Got endpoint %@", endpoint]);
 }
-
-/*
- 
-- (void)onOpen:(SRWebSocket *)ws withConnect:(NSString *)connect{
-    NSLog(@"Connecting...");
-}
-
-- (void)fetchEndpointWS: (NSString *)url {
-    @try {
-        [self log: [NSString stringWithFormat: @"Fetching endpoint from %@", url]];
-        SRWebSocket *ws = [[SRWebSocket alloc] initWithURL:[NSURL URLWithString: url]];
-        // we'll handle the async calls that this requires.
-        ws.delegate = self;
-        [ws open];
-        return;
-    }
-    @catch (NSException *exception) {
-        [self print: [NSString stringWithFormat: @"Crapsticks: something bad happened: %@", exception.reason]
-         withPrefix: @"ERROR "];
-        return;
-    }
-    @finally {
-    }
-    return;
-}
-
-- (void) webSocketDidOpen:(SRWebSocket *)ws {
-    websocket = ws;
-    NSError *error;
-    NSString *token = [[self app] getTokenAsString];
-    NSDictionary *connect = [NSDictionary dictionaryWithObjectsAndKeys:
-                             @"apns", @"type",
-                             token, @"token",
-                             // the following are optional, but will result in the notification being presented
-                             // if the app is not running or in the foreground.
-                             //@"A Simplepush Event has appeared!", @"title",
-                             //@"I wish that silent notification worked.", @"body",
-                             nil];
-    NSData *msg = [NSJSONSerialization dataWithJSONObject: [ NSDictionary dictionaryWithObjectsAndKeys:
-                                                            @"hello", @"messageType",
-                                                            @"", @"uaid",
-                                                            @[], @"channelIDs",
-                                                            connect, @"connect",
-                                                            nil]
-                                                  options: NSJSONWritingPrettyPrinted
-                                                    error: &error
-                   ];
-    if (error != nil) {
-        [self error: [error description] ];
-    }
-    [self log: [NSString stringWithFormat: @"Sending: %@", [[NSString alloc] initWithData:msg encoding: NSUTF8StringEncoding ]]];
-    [ws send:msg];
-    
-}
-
-- (void) webSocket:(SRWebSocket *)ws didReceiveMessage:(id)message {
-    NSError *error;
-    id obj;
-    NSDictionary *msg;
-    NSString *msgType;
-    
-    if ([message length] < 2) {
-        [self log: @"Got empty websocket message"];
-        return;
-    }
-    [self log: [NSString stringWithFormat:@"Got reply\n%@", (NSString *)message]];
-    @try {
-        obj = [NSJSONSerialization JSONObjectWithData:[message dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error: &error ];
-        if (error != nil) {
-            [self error: error.description];
-            return;
-        }
-        if (![obj isKindOfClass:[NSDictionary class]]) {
-            [self error: @"Did not get a dictionary response back."];
-            [self log: (NSString *)message];
-        }
-        msg = (NSDictionary *)obj;
-    }
-    @catch (NSException *exception) {
-        [self error: exception.description];
-        return;
-    }
-    @finally {};
-    // handle message
-    msgType = (NSString*)[msg objectForKey:@"messageType"];
-    if ([msgType isEqualToString: @"hello"]) {
-        // Remember kids, ObjectiveC dictionaries are specifed as Value:Key.
-        // makes sense Because that.
-        NSData *regmsg = [NSJSONSerialization dataWithJSONObject:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                           @"register", @"messageType",
-                                                           [self genGuid], @"channelID",
-                                                           nil]
-                                                  options: NSJSONWritingPrettyPrinted
-                                                    error: &error
-                   ];
-        [ws send: regmsg];
-        return;
-    } else if ([msgType isEqualToString: @"register"]) {
-        endpoint = (NSString *)[msg objectForKey:@"pushEndpoint"];
-        if (endpoint == nil || [endpoint length] == 0) {
-            [self error: @"returned endpoint is empty"];
-            return;
-        }
-        // At this point, it's safe to close the websocket handler.
-        //[ws close];
-    }
-    NSLog(@"Got message: %@", msg);
-    return;
-}
-
-- (void) webSocket:(SRWebSocket *)ws didFailWithError:(NSError *)error {
-    // Show error and die
-    [self error: [NSString stringWithFormat: @"Websocket failed: %@", error.description]];
-}
-
-- (void) webSocket:(SRWebSocket *)ws didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean {
-    [self log: [NSString stringWithFormat: @"Websocket closed: %@", reason]];
-    endpoint = @"";
-    websocket = nil;
-    // shutdown
-}
- */
 
 //Connect to the remote host
 - (IBAction)SendData:(id)sender {
